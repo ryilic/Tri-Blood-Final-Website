@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tri-Blood AI System</title>
+    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+    <style>
+        body { background-color: #d17a7a !important; min-height: 100vh; font-family: 'Inter', sans-serif; color: #1f2937; }
+        .design-card { background: rgba(255, 255, 255, 0.95); border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); padding: 2.5rem; }
+        .ai-status-badge { font-weight: 800; font-size: 0.65rem; text-transform: uppercase; padding: 0.4rem 0.8rem; border-radius: 0.5rem; }
+        .reference-tag { border: 1px solid #1f2937; border-radius: 999px; padding: 0.35rem 1rem; font-weight: bold; font-size: 0.6rem; text-transform: uppercase; }
+        .analysis-box { background-color: #f1f2f5; border: 1px dashed #c0c0c0; border-radius: 16px; aspect-ratio: 16/9; overflow: hidden; position: relative; }
+        .btn-upload { background-color: #c00000; color: white; font-weight: bold; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px; transition: all 0.2s; }
+        .btn-upload:hover { background-color: #9d0000; cursor: pointer; }
+        
+        /* New Styles for Step Icons */
+        .step-number { 
+            background-color: #c00000; 
+            color: white; 
+            width: 32px; 
+            height: 32px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            border-radius: 50%; 
+            font-weight: 900; 
+            font-size: 0.8rem; 
+            flex-shrink: 0; 
+        }
+    </style>
+</head>
+<body class="p-6 md:p-10 flex justify-center">
+
+    <div class="max-w-7xl w-full flex flex-col gap-10">
+
+        <div class="design-card grid md:grid-cols-2 gap-10">
+            <div>
+                <p class="text-red-700 font-bold uppercase tracking-widest text-[11px]">ABOUT OUR WEBSITE</p>
+                <h1 class="text-3xl font-black mt-1 mb-6 text-gray-900">What is Tri-Blood?</h1>
+                <p class="text-sm text-gray-700 leading-relaxed font-semibold">
+                    Tri-Blood is an AI-powered system designed to identify: <strong>G6PD Deficiency, Sickle Cell Anemia, and Thalassemia.</strong>
+                </p>
+            </div>
+            <div>
+                <h2 class="text-2xl font-black mb-6 text-gray-900">Why Use It?</h2>
+                <p class="text-sm text-gray-700 leading-relaxed font-semibold">
+                    Automating detection reduces screening time and minimizes human error in manual microscopic evaluations.
+                </p>
+            </div>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-10">
+
+            <div class="design-card flex flex-col items-center">
+                <h1 class="text-4xl font-extrabold text-[#c00000] tracking-tighter uppercase mb-1">TRI-BLOOD</h1>
+                <p class="text-[10px] text-gray-600 font-black uppercase tracking-wider mb-8">AI MORPHOLOGICAL IDENTIFICATION</p>
+
+                <div class="w-full analysis-box flex items-center justify-center">
+                    <img id="uploaded-img" class="hidden w-full h-full object-contain absolute inset-0" />
+                    <video id="webcam" autoplay playsinline class="hidden w-full h-full object-cover absolute inset-0"></video>
+                    <canvas id="overlay" class="absolute inset-0 w-full h-full z-10 pointer-events-none"></canvas>
+                    <span id="placeholder-text" class="text-gray-400 font-black text-sm uppercase">AWAITING INPUT</span>
+                </div>
+
+                <div class="w-full mt-6 space-y-3">
+                    <input type="file" id="upload" class="hidden" accept="image/*">
+                    <button onclick="document.getElementById('upload').click()" class="w-full btn-upload py-4 rounded-xl">UPLOAD MICROSCOPY IMAGE</button>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button id="webcam-btn" class="w-full py-3 bg-white border border-red-700 text-red-700 rounded-xl font-bold text-xs uppercase cursor-pointer">WEBCAM</button>
+                        <button id="snap-btn" class="hidden w-full py-3 bg-red-700 text-white rounded-xl font-bold shadow-md text-xs uppercase cursor-pointer">ANALYZE SNAP</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="design-card flex flex-col">
+                <div class="flex items-center justify-between w-full mb-8">
+                    <p class="text-red-700 font-bold uppercase tracking-widest text-[11px]">DIAGNOSIS RESULT</p>
+                    <div id="status-badge" class="ai-status-badge bg-gray-100 text-gray-500">AI STATUS: IDLE</div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-x-4 gap-y-3 mb-8 w-full">
+                    <div class="reference-tag flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span> THALASSEMIA</div>
+                    <div class="reference-tag flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-green-500"></span> G6PD DEF.</div>
+                    <div class="reference-tag flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-orange-600"></span> SICKLE CELL</div>
+                    <div class="reference-tag flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-yellow-400"></span> NORMAL RBC</div>
+                </div>
+
+                <div id="result-box" class="w-full relative analysis-box flex flex-col items-center justify-center p-6 flex-grow text-center">
+                    <span class="text-gray-400 font-black text-sm uppercase">Waiting for Analysis</span>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-10">
+            
+            <div class="design-card">
+                <h2 class="text-2xl font-black mb-10 text-gray-900">How It Works</h2>
+                <div class="space-y-8">
+                    <div class="flex items-start gap-4">
+                        <div class="step-number">1</div>
+                        <div>
+                            <h3 class="font-black text-sm uppercase tracking-tight text-gray-900">Image Upload</h3>
+                            <p class="text-[13px] text-gray-600 font-medium">Upload microscopic slides or use live capture.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-4">
+                        <div class="step-number">2</div>
+                        <div>
+                            <h3 class="font-black text-sm uppercase tracking-tight text-gray-900">AI Analysis</h3>
+                            <p class="text-[13px] text-gray-600 font-medium">YOLOv11 scans for morphological abnormalities.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="design-card">
+                <h2 class="text-2xl font-black mb-4 text-gray-900">Our Commitment to Health</h2>
+                <p class="text-sm text-gray-700 font-semibold mb-10 leading-relaxed">
+                    Aligned with UN Sustainable Development Goals 3, 9, and 10.
+                </p>
+                <div class="flex flex-wrap gap-3">
+                    <div class="reference-tag">SDG 3: Good Health</div>
+                    <div class="reference-tag">SDG 9: Innovation</div>
+                    <div class="reference-tag">SDG 10: Reduced Inequalities</div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        const API_URL = "https://detect.roboflow.com/tri-blood-iw3al/18?api_key=jFEcRC9ZNlEy9YRvHfOJ";
+
+        const DATA_MAP = {
+            "SICKLE CELL": {
+                label: "SICKLE CELL ANEMIA",
+                features: "Crescent or sickle-shaped cells (drepanocytes) and polychromasia observed.",
+                tips: "Ensure adequate hydration. Avoid extreme temperatures and overexertion. Monitor for pain crises — seek emergency care if breathing difficulty occurs.",
+                todo: "Confirm with Hemoglobin Electrophoresis. Specialist referral required.",
+                color: "text-orange-600", hex: "#ea580c", urgent: true
+            },
+            "THALASSEMIA": {
+                label: "THALASSEMIA",
+                features: "Microcytic, hypochromic cells with anisocytosis and poikilocytosis observed.",
+                tips: "Avoid unsupervised iron supplementation until variant is confirmed. Report fatigue, pallor, or jaundice to a physician immediately.",
+                todo: "Follow up with CBC and Iron Studies to confirm variant type.",
+                color: "text-blue-600", hex: "#2563eb", urgent: true
+            },
+            "G6PD DEF.": {
+                label: "G6PD DEFICIENCY",
+                features: "Bite cells, blister cells, and ghost cells identified.",
+                tips: "Avoid oxidative triggers: primaquine, dapsone, fava beans, and naphthalene. Watch for jaundice, dark urine, or sudden fatigue — signs of acute hemolysis.",
+                todo: "Request G6PD enzyme assay; avoid oxidative medications without physician approval.",
+                color: "text-green-600", hex: "#22c55e", urgent: true
+            },
+            "NORMAL RBC": {
+                label: "NORMAL RBC",
+                features: "Normocytic/Normochromic. Consistent 7-8µm size with 1/3 central pallor.",
+                tips: "No morphological abnormalities detected. Maintain routine check-ups as recommended by your physician.",
+                todo: "No immediate abnormalities detected.",
+                color: "text-yellow-600", hex: "#facc15", urgent: false
+            }
+        };
+
+        function resolveClass(rawClass) {
+            const s = rawClass.toUpperCase().trim();
+            if (s.includes("SICKLE"))                       return "SICKLE CELL";
+            if (s.includes("THALASS"))                      return "THALASSEMIA";
+            if (s.includes("G6PD") || s.includes("G 6PD")) return "G6PD DEF.";
+            if (s.includes("NORMAL") || s.includes("RBC")) return "NORMAL RBC";
+            return null;
+        }
+
+        function setStatus(text, classes) {
+            const badge = document.getElementById("status-badge");
+            badge.innerText = `AI STATUS: ${text}`;
+            badge.className = `ai-status-badge ${classes}`;
+        }
+
+        async function analyze(imageSource) {
+            setStatus("CONNECTING...", "bg-blue-100 text-blue-600 animate-pulse");
+            const resBox = document.getElementById("result-box");
+
+            try {
+                const base64Data = imageSource.split(",")[1];
+                const response = await fetch(API_URL, {
+                    method: "POST",
+                    body: base64Data,
+                    headers: { "Content-Type": "application/x-www-form-urlencoded" }
+                });
+
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+                const data = await response.json();
+                const canvas = document.getElementById("overlay");
+                const ctx = canvas.getContext("2d");
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                if (data.predictions && data.predictions.length > 0) {
+                    setStatus("ONLINE", "bg-green-100 text-green-600");
+
+                    data.predictions.forEach(p => {
+                        const key = resolveClass(p.class);
+                        const config = key ? DATA_MAP[key] : { hex: "#FF0000" };
+                        ctx.strokeStyle = config.hex;
+                        ctx.lineWidth = 4;
+                        ctx.strokeRect(p.x - p.width / 2, p.y - p.height / 2, p.width, p.height);
+                    });
+
+                    const topKey = resolveClass(data.predictions[0].class);
+                    const info = topKey ? DATA_MAP[topKey] : null;
+
+                    if (!info) {
+                        resBox.innerHTML = `
+                            <h2 class="text-gray-600 font-black text-lg uppercase italic">Unclassified Morphology</h2>
+                            <p class="text-xs font-bold text-gray-500 mt-2">Detected cells do not match known profiles. Refer to a specialist.</p>`;
+                        return;
+                    }
+
+                    const urgentBanner = info.urgent
+                        ? `<p class="text-[10px] font-black text-red-600 text-center mt-6 animate-pulse uppercase">⚠️ Pre-screening tool only — Seek Medical Professional Help Immediately</p>`
+                        : `<p class="text-[10px] font-semibold text-gray-400 text-center mt-6 uppercase">Pre-screening result only. Confirm with a licensed physician.</p>`;
+
+                    resBox.innerHTML = `
+                        <div class="text-left w-full">
+                            <h2 class="text-4xl font-black ${info.color} mb-4">${info.label}</h2>
+                            <p class="text-[10px] font-black text-gray-400 uppercase">Morphology:</p>
+                            <p class="text-sm font-bold text-gray-800 mb-4">${info.features}</p>
+                            <div class="bg-amber-50 border border-amber-200 p-4 rounded-xl mb-3">
+                                <p class="text-[10px] font-black text-amber-700 uppercase">Handling Tips:</p>
+                                <p class="text-xs font-semibold text-gray-700 mt-1 leading-relaxed">${info.tips}</p>
+                            </div>
+                            <div class="bg-red-50 p-4 rounded-xl border border-red-100">
+                                <p class="text-[10px] font-black text-red-600 uppercase">What to do:</p>
+                                <p class="text-xs font-bold text-gray-700 mt-1">${info.todo}</p>
+                            </div>
+                            ${urgentBanner}
+                        </div>`;
+
+                } else {
+                    setStatus("ONLINE", "bg-green-100 text-green-600");
+                    resBox.innerHTML = `
+                        <h2 class="text-red-600 font-black text-xl uppercase italic">Invalid Input</h2>
+                        <p class="text-xs font-bold text-gray-500">No RBC markers identified.</p>`;
+                }
+
+            } catch (err) {
+                console.error("Detection error:", err);
+                setStatus("ERROR", "bg-red-100 text-red-600");
+                resBox.innerHTML = `<p class="text-red-600 font-bold uppercase">Connection Failed. Check Internet.</p>`;
+            }
+        }
+
+        document.getElementById("upload").onchange = (e) => {
+            const reader = new FileReader();
+            reader.onload = (f) => {
+                const img = document.getElementById("uploaded-img");
+                img.src = f.target.result;
+                img.classList.remove("hidden");
+                document.getElementById("placeholder-text").classList.add("hidden");
+                document.getElementById("webcam").classList.add("hidden");
+
+                const temp = new Image();
+                temp.src = f.target.result;
+                temp.onload = () => {
+                    const canvas = document.getElementById("overlay");
+                    canvas.width = temp.width;
+                    canvas.height = temp.height;
+                    analyze(f.target.result);
+                };
+            };
+            reader.readAsDataURL(e.target.files[0]);
+        };
+
+        let stream = null;
+
+        document.getElementById("webcam-btn").onclick = async () => {
+            const v = document.getElementById("webcam");
+            if (!stream) {
+                stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+                v.srcObject = stream;
+                v.classList.remove("hidden");
+                document.getElementById("snap-btn").classList.remove("hidden");
+                document.getElementById("placeholder-text").classList.add("hidden");
+            } else {
+                stream.getTracks().forEach(t => t.stop());
+                stream = null;
+                v.classList.add("hidden");
+                document.getElementById("snap-btn").classList.add("hidden");
+            }
+        };
+
+        document.getElementById("snap-btn").onclick = () => {
+            const v = document.getElementById("webcam");
+            const c = document.createElement("canvas");
+            c.width = v.videoWidth;
+            c.height = v.videoHeight;
+            c.getContext("2d").drawImage(v, 0, 0);
+            document.getElementById("overlay").width = v.videoWidth;
+            document.getElementById("overlay").height = v.videoHeight;
+            analyze(c.toDataURL("image/jpeg", 0.8));
+        };
+    </script>
+</body>
+</html>
